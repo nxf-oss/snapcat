@@ -1,0 +1,44 @@
+	CONTRIBUTING TO SNAPCAT
+
+	 We welcome contributions! Make contributing easy and transparent.
+
+	 Development Setup:
+	1. Fork the repository
+	2. Clone your fork: git clone https://github.com/nxf-oss/snapcat
+	3. Install dependencies: npm install
+	4. Build project: npm run build
+	5. Run tests: npm test
+
+	 Areas for Contribution:
+	- Bug fixes and issue resolution
+	- Performance improvements
+	- New output formats (YAML, HTML, CSV)
+	- Additional file metadata
+	- Enhanced pattern matching
+	- Documentation improvements
+	- Test coverage expansion
+
+	 Pull Request Process:
+	1. Create a feature branch from main
+	2. Make your changes with tests
+	3. Ensure all tests pass: npm test
+	4. Update documentation if needed
+	5. Submit PR with clear description
+
+	 Reporting Bugs:
+	- Use GitHub Issues: https://github.com/nxf-oss/snapcat/issues
+	- Include SnapCat version and OS
+	- Provide steps to reproduce
+	- Include error messages and stack traces
+
+	 Feature Requests:
+	- Open an issue with "Feature Request" label
+	- Describe use case and benefits
+	- Consider implementation complexity
+
+	 Questions?
+	- Open a discussion on GitHub
+	- Check existing issues and PRs
+
+TextLint is a Fabrizio Perin, Lukas Renggli, and Jorge Ressia production.
+Powered by Pharo Smalltalk, Seaside, and Cog.
