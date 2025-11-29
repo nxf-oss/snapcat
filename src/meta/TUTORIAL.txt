@@ -1,0 +1,61 @@
+	SNAPCAT TUTORIAL - MASTERING FILE MANAGEMENT
+
+	 Lesson 1: Basic Tree Generation
+	Generate a tree of your current directory:
+	  $ snapcat tree
+
+	Generate tree of specific directory:
+	  $ snapcat tree /path/to/project
+
+	Save tree to JSON file:
+	  $ snapcat tree --output project-structure.json
+
+	 Lesson 2: Output Formats
+	JSON format (default, machine-readable):
+	  $ snapcat tree --format json
+
+	Markdown format (human-readable):
+	  $ snapcat tree --format md
+
+	Save Markdown to file:
+	  $ snapcat tree --format md --output README-tree.md
+
+	 Lesson 3: Recursion Control
+	Disable recursion (current dir only):
+	  $ snapcat tree --no-recursive
+
+	Limit recursion depth:
+	  $ snapcat tree --depth 2
+
+	 Lesson 4: Ignore Patterns
+	Use default ignore patterns:
+	  $ snapcat tree  # automatically ignores node_modules, .git, etc.
+
+	Add custom ignore patterns:
+	  $ snapcat tree --ignore "*.log" "tmp/" "*.tmp"
+
+	 Lesson 5: File Reading with Cat
+	Read specific files:
+	  $ snapcat cat file1.txt file2.js
+
+	Pattern matching:
+	  $ snapcat cat "*.ts" "*.json"
+
+	Preview file contents:
+	  $ snapcat cat README.md --preview
+
+	 Lesson 6: Advanced Usage
+	Combine tree and cat:
+	  $ snapcat tree --format json | jq .  # Pretty print with jq
+
+	Generate project documentation:
+	  $ snapcat tree src --format md --output SOURCE-STRUCTURE.md
+
+	File audit with metadata:
+	  $ snapcat cat "*.js" --format json --output js-audit.json
+
+	 Pro Tips:
+	 Use --verbose for debugging
+	 Combine with other CLI tools (jq, grep)
+	 Create scripts for repetitive tasks
+	 Use .snapcatignore for project-specific patterns
