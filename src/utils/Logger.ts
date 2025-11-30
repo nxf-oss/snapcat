@@ -1,90 +1,161 @@
-import chalk from 'chalk';
+import { LogLevel, LogType, LogEntry } from './lib/logger/types.js';
+import { LogLevelManager } from './lib/logger/logLevel.js';
+import { PerformanceTracker } from './lib/logger/performanceTracker.js';
+import { ConsoleWriter } from './lib/logger/consoleWriter.js';
+import { LoggerValidator } from './lib/logger/validator.js';
 
 export class Logger {
-	private static level: 'debug' | 'info' | 'warn' | 'error' = 'info';
-	private static isDebugMode = false;
-	private static startTime: number = Date.now();
+	private static levelManager = new LogLevelManager();
+	private static performanceTracker = PerformanceTracker;
 
-	static setLevel(level: 'debug' | 'info' | 'warn' | 'error'): void {
-		this.level = level;
-		this.isDebugMode = level === 'debug';
+	static setLevel(level: LogLevel): void {
+		LoggerValidator.validateLogLevel(level);
+
+		this.levelManager.setLevel(level);
 		this.debug(`Log level set to: ${level}`);
 	}
 
 	static setDebugMode(debug: boolean): void {
-		this.isDebugMode = debug;
+		this.levelManager.setDebugMode(debug);
+
 		if (debug) {
-			this.level = 'debug';
-			this.startTime = Date.now();
+			this.performanceTracker.reset();
 			this.debug('Debug mode enabled - Starting performance tracking');
 		}
 	}
 
-	private static shouldLog(level: string): boolean {
-		const levels = ['debug', 'info', 'warn', 'error'];
-		return levels.indexOf(level) >= levels.indexOf(this.level);
-	}
-
-	private static getTimestamp(): string {
-		const now = Date.now();
-		const diff = now - this.startTime;
-		return `+${diff}ms`;
-	}
-
 	static debug(message: string, data?: any): void {
-		if (this.shouldLog('debug') && this.isDebugMode) {
-			const timestamp = chalk.gray(`[${this.getTimestamp()}]`);
-			console.log(chalk.gray('🔍 [DEBUG]'), timestamp, chalk.gray(message));
-			if (data) {
-				console.log(chalk.gray('   Data:'), JSON.stringify(data, null, 2));
-			}
+		LoggerValidator.validateMessage(message);
+
+		if (this.levelManager.shouldLog('debug') && this.levelManager.isDebugMode()) {
+			const entry: LogEntry = {
+				type: 'debug',
+				message,
+				data,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
 	static info(message: string): void {
-		if (this.shouldLog('info')) {
-			console.log(chalk.blue('ℹ'), chalk.blue(message));
+		LoggerValidator.validateMessage(message);
+
+		if (this.levelManager.shouldLog('info')) {
+			const entry: LogEntry = {
+				type: 'info',
+				message,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
 	static success(message: string): void {
-		if (this.shouldLog('info')) {
-			console.log(chalk.green('✅'), chalk.green(message));
+		LoggerValidator.validateMessage(message);
+
+		if (this.levelManager.shouldLog('info')) {
+			const entry: LogEntry = {
+				type: 'success',
+				message,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
-	static warn(message: string, readError: unknown): void {
-		if (this.shouldLog('warn')) {
-			console.log(chalk.yellow('⚠'), chalk.yellow(message));
+	static warn(message: string, error?: any): void {
+		LoggerValidator.validateMessage(message);
+
+		if (this.levelManager.shouldLog('warn')) {
+			const entry: LogEntry = {
+				type: 'warn',
+				message,
+				error,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
 	static error(message: string, error?: any): void {
-		if (this.shouldLog('error')) {
-			console.log(chalk.red('❌'), chalk.red(message));
-			if (error && this.isDebugMode) {
-				console.log(chalk.red('   Error Details:'), error);
-				if (error.stack) {
-					console.log(chalk.red('   Stack Trace:'), error.stack);
-				}
-			}
+		LoggerValidator.validateMessage(message);
+
+		if (this.levelManager.shouldLog('error')) {
+			const entry: LogEntry = {
+				type: 'error',
+				message,
+				error,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
 	static performance(marker: string): void {
-		if (this.isDebugMode) {
-			const timestamp = this.getTimestamp();
-			console.log(
-				chalk.magenta('⏱️ [PERF]'),
-				chalk.magenta(`[${timestamp}]`),
-				chalk.magenta(marker),
-			);
+		LoggerValidator.validateMessage(marker);
+
+		if (this.levelManager.isDebugMode()) {
+			const entry: LogEntry = {
+				type: 'performance',
+				message: marker,
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
 	}
 
 	static divider(): void {
-		if (this.isDebugMode) {
-			console.log(chalk.gray('─'.repeat(80)));
+		if (this.levelManager.isDebugMode()) {
+			const entry: LogEntry = {
+				type: 'divider',
+				message: '',
+				timestamp: Date.now(),
+				elapsed: this.performanceTracker.getElapsedTime(),
+			};
+
+			ConsoleWriter.write(entry);
 		}
+	}
+
+	// Additional utility methods
+	static startPerformance(marker: string): void {
+		if (this.levelManager.isDebugMode()) {
+			this.performanceTracker.start(marker);
+		}
+	}
+
+	static endPerformance(marker: string): number {
+		if (this.levelManager.isDebugMode()) {
+			const duration = this.performanceTracker.end(marker);
+			this.performance(`Performance marker '${marker}': ${duration}ms`);
+			return duration;
+		}
+		return 0;
+	}
+
+	static getCurrentLevel(): LogLevel {
+		return this.levelManager.getCurrentLevel();
+	}
+
+	static isDebugEnabled(): boolean {
+		return this.levelManager.isDebugMode();
+	}
+
+	static reset(): void {
+		this.levelManager.setLevel('info');
+		this.performanceTracker.reset();
 	}
 }
