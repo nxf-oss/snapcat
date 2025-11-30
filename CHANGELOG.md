@@ -9,13 +9,14 @@ and adheres to Semantic Versioning.
 
 ---
 
-
 ## [1.0.0] - 2025-11-30
 
 ### Added
+
 - First stable release of the SnapCat CLI toolkit.
 
 #### Core Features
+
 - `snapcat cat <path>`:
   - Safe text-preview system.
   - Auto-detection of text vs binary files using extension + heuristic checks.
@@ -29,6 +30,7 @@ and adheres to Semantic Versioning.
   - Depth-based indentation.
 
 #### File Processing Engine
+
 - Concurrency control for batch processing.
 - Timeout controller for long-running file operations.
 - Metadata extraction:
@@ -43,6 +45,7 @@ and adheres to Semantic Versioning.
 - Preview caching system.
 
 #### Ignore & Filtering System
+
 - Pattern loader supporting:
   - Literal names
   - Glob patterns
@@ -50,6 +53,7 @@ and adheres to Semantic Versioning.
 - Smart grouping into pre-compiled matching rules.
 
 #### Configuration System
+
 - Runtime-loaded configuration via:
   - `defaultConfig`
   - Future override support (env/config file)
@@ -63,6 +67,7 @@ and adheres to Semantic Versioning.
   - `binaryPlaceholder`
 
 #### Utility Modules Added
+
 - **FileSystem**
   - Safe `stat` wrapper
   - Safe `readFile` with text enforcement
@@ -89,6 +94,7 @@ and adheres to Semantic Versioning.
   - Dual extension/path matching
 
 #### Project Structure
+
 - Fully modular TypeScript architecture.
 - CLI entrypoints under `src/bin`.
 - Commands under `src/commands`.
@@ -98,6 +104,7 @@ and adheres to Semantic Versioning.
 - Documentation and metadata under `src/meta`.
 
 #### Developer Metadata
+
 - Strict TypeScript build using `tsc --build`.
 - Complete declaration map generation.
 - Tree-shaking friendly module structure (ESM).
@@ -107,6 +114,7 @@ and adheres to Semantic Versioning.
 - Yarn-based project bootstrap for reproducible lockfiles.
 
 #### Platform & Runtime Behavior
+
 - Fully compatible with:
   - Linux (x64, ARM64)
   - macOS
@@ -115,6 +123,7 @@ and adheres to Semantic Versioning.
 - No native modules involved.
 
 #### Performance Guarantees
+
 - Max 32 concurrent file ops (configurable).
 - Directory scan time optimized by:
   - FastGlob parallel expansion
@@ -122,18 +131,23 @@ and adheres to Semantic Versioning.
 - Binary detection avoids decode overreads.
 
 ### Changed
+
 - None for the initial stable release.
 
 ### Deprecated
+
 - None.
 
 ### Removed
+
 - None.
 
 ### Fixed
+
 - None.
 
 ### Security
+
 - Binary preview lockout:
   - Prevents unsafe terminal output.
   - Ensures only text files are rendered.

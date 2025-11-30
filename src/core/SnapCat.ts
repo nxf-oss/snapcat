@@ -1,40 +1,62 @@
 import { TreeCommand } from '../commands/TreeCommand.js';
 import { CatCommand } from '../commands/CatCommand.js';
 import { CommandOptions } from '../types/index.js';
-import { Logger } from '../utils/Logger.js';
+import { CommandExecutor } from './lib/snapcat/commandExecutor.js';
+import { SnapCatCacheManager } from './lib/snapcat/cacheManager.js';
+import { SnapCatLogger } from './lib/snapcat/logger.js';
+import { SnapCatValidator } from './lib/snapcat/validator.js';
+import { SnapCatOptions } from './lib/snapcat/types.js';
+
 export class SnapCat {
-	private treeCommand: TreeCommand;
-	private catCommand: CatCommand;
-	constructor() {
-		Logger.debug('Initializing SnapCat core');
-		this.treeCommand = new TreeCommand();
-		this.catCommand = new CatCommand();
-		Logger.debug('SnapCat core initialized');
+	private commandExecutor: CommandExecutor;
+	private cacheManager: SnapCatCacheManager;
+
+	constructor(options: SnapCatOptions = {}) {
+		SnapCatLogger.setDebugMode(!!options.debug);
+		SnapCatLogger.logInitialization();
+
+		const treeCommand = new TreeCommand();
+		const catCommand = new CatCommand();
+
+		this.commandExecutor = new CommandExecutor(treeCommand, catCommand);
+		this.cacheManager = new SnapCatCacheManager(options.enableCache ?? true);
+
+		SnapCatLogger.logInitializationComplete();
 	}
-	async tree(targetPath?: string, options: CommandOptions = {}) {
-		try {
-			Logger.debug('Executing tree command via SnapCat core');
-			await this.treeCommand.execute(targetPath, options);
-			Logger.debug('Tree command completed successfully');
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-			Logger.error('SnapCat tree execution failed', error);
-			throw new Error(`SnapCat tree failed: ${errorMessage}`);
+
+	async tree(targetPath?: string, options: CommandOptions = {}): Promise<void> {
+		SnapCatValidator.validateCommandOptions(options);
+		const validatedPath = SnapCatValidator.validateTargetPath(targetPath);
+
+		const result = await this.commandExecutor.executeTree(validatedPath, options);
+
+		if (!result.success && result.error) {
+			throw new Error(result.error);
 		}
 	}
-	async cat(filePatterns: string[], options: CommandOptions = {}) {
-		try {
-			Logger.debug('Executing cat command via SnapCat core');
-			await this.catCommand.execute(filePatterns, options);
-			Logger.debug('Cat command completed successfully');
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-			Logger.error('SnapCat cat execution failed', error);
-			throw new Error(`SnapCat cat failed: ${errorMessage}`);
+
+	async cat(filePatterns: string[], options: CommandOptions = {}): Promise<void> {
+		SnapCatValidator.validateCommandOptions(options);
+		SnapCatValidator.validateFilePatterns(filePatterns);
+
+		const result = await this.commandExecutor.executeCat(filePatterns, options);
+
+		if (!result.success && result.error) {
+			throw new Error(result.error);
 		}
 	}
+
 	clearCache(): void {
-		Logger.debug('Clearing SnapCat caches');
-		Logger.debug('SnapCat caches cleared');
+		SnapCatLogger.logCacheClear();
+		this.cacheManager.clearCache();
+		SnapCatLogger.logCacheCleared();
+	}
+
+	setCacheEnabled(enabled: boolean): void {
+		this.cacheManager.setCacheEnabled(enabled);
+	}
+
+	getCacheStatus(): { enabled: boolean } {
+		return this.cacheManager.getCacheStatus();
 	}
 }

@@ -1,7 +1,7 @@
 {
   "name": "snapcat",
-  "version": "1.0.0",
-  "description": "Tree it, Read it, Shape it",
+  "version": "1.0.1",
+  "description": "Tree it,Read it,Shape it - A powerful CLI tool for file system exploration and documentation",
   "keywords": [
     "cli",
     "tree",
@@ -9,57 +9,130 @@
     "filesystem",
     "snapshot",
     "files",
+    "directory",
+    "explorer",
+    "documentation",
+    "metadata",
     "node-cli",
     "typescript",
-    "esm"
+    "esm",
+    "file-processing",
+    "code-analysis",
+    "project-structure"
   ],
   "homepage": "https://github.com/nxf-oss/snapcat#readme",
   "bugs": {
-    "url": "https://github.com/nxf-oss/snapcat/issues"
+    "url": "https://github.com/nxf-oss/snapcat/issues",
+    "email": "support@nxf.dev"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nxf-oss/snapcat.git"
+    "url": "git+https://github.com/nxf-oss/snapcat.git",
+    "directory": "packages/snapcat"
   },
   "license": "MIT",
-  "author": "neuxdotdev",
+  "author": {
+    "name": "neuxdotdev",
+    "email": "neux@nxf.dev",
+    "url": "https://github.com/neuxdotdev"
+  },
+  "contributors": [
+    {
+      "name": "NXF Open Source",
+      "url": "https://github.com/nxf-oss"
+    }
+  ],
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "snapcat": "dist/bin/snapcat.js"
+    "snapcat": "dist/index.js"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=18.0.0"
   },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
   "scripts": {
-    "build": "yarn run clean && tsc --build",
-    "dev": "ts-node --esm --loader ts-node/esm bin/snapcat.ts",
-    "start": "node --enable-source-maps dist/bin/snapcat.js",
-    "lint": "eslint 'src/**/*.{ts,tsx}' 'bin/**/*.ts'",
-    "test": "jest",
-    "clean": "rm -rf dist .tsbuildinfo",
-    "prepare": "yarn run build"
+    "build": "yarn clean && tsup",
+    "dev": "tsup --watch",
+    "start": "node --enable-source-maps dist/index.js",
+    "lint": "eslint 'src/**/*.ts' --max-warnings=0",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "type-check": "tsc --noEmit",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "clean": "rimraf dist .tsbuildinfo coverage",
+    "prepare": "yarn build",
+    "prepublishOnly": "yarn test && yarn lint && yarn type-check",
+    "prepack": "yarn build",
+    "release": "yarn build && changeset publish",
+    "version": "changeset && git add CHANGELOG.md",
+    "docs": "node dist/index.js docs",
+    "snapcat": "node dist/index.js"
   },
   "dependencies": {
-    "chalk": "^5.6.2",
-    "commander": "^14.0.2",
-    "fast-glob": "^3.3.3",
-    "prettier": "^3.0.0"
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "fast-glob": "^3.3.2",
+    "prettier": "^3.1.0"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
-    "@typescript-eslint/eslint-plugin": "^8.48.0",
-    "@typescript-eslint/parser": "^8.48.0",
-    "eslint": "^9.39.1",
-    "jest": "^30.2.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "@changesets/cli": "^2.27.1",
+    "@swc/core": "^1.15.3",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.8.10",
+    "@typescript-eslint/eslint-plugin": "^6.8.0",
+    "@typescript-eslint/parser": "^6.8.0",
+    "eslint": "^8.51.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.1",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2"
   },
-  "enginesStrict": true
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "release": {
+    "branches": [
+      "master"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "volta": {
+    "node": "18.18.0"
+  },
+  "packageManager": "yarn@1.22.22"
 }

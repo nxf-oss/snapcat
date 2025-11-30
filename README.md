@@ -208,22 +208,22 @@ export SNAPCAT_DEBUG=true
 
 ```json
 {
-	"README.md": {
-		"extension": ".md",
-		"fullPath": "/project/README.md",
-		"relativePath": "README.md",
-		"baseName": "README",
-		"size": "2.45KB",
-		"sha256": "a1b2c3d4e5f6...",
-		"fileContent": ["# Project Title", "Project description...", "## Installation"],
-		"fileType": {
-			"isFile": true,
-			"isDirectory": false,
-			"isSymbolicLink": false
-		},
-		"lastModified": "2024-01-15T10:30:00.000Z",
-		"permissions": "rw-r--r--"
-	}
+ "README.md": {
+  "extension": ".md",
+  "fullPath": "/project/README.md",
+  "relativePath": "README.md",
+  "baseName": "README",
+  "size": "2.45KB",
+  "sha256": "a1b2c3d4e5f6...",
+  "fileContent": ["# Project Title", "Project description...", "## Installation"],
+  "fileType": {
+   "isFile": true,
+   "isDirectory": false,
+   "isSymbolicLink": false
+  },
+  "lastModified": "2024-01-15T10:30:00.000Z",
+  "permissions": "rw-r--r--"
+ }
 }
 ```
 
@@ -246,25 +246,23 @@ Project description...
 
 ```json
 {
-	"extension": ".md",
-	"fullPath": "/project/README.md",
-	"relativePath": "README.md",
-	"baseName": "README",
-	"size": "2.45KB",
-	"sha256": "a1b2c3d4e5f6...",
-	"fileType": {
-		"isFile": true,
-		"isDirectory": false,
-		"isSymbolicLink": false
-	},
-	"lastModified": "2024-01-15T10:30:00.000Z",
-	"permissions": "rw-r--r--"
+ "extension": ".md",
+ "fullPath": "/project/README.md",
+ "relativePath": "README.md",
+ "baseName": "README",
+ "size": "2.45KB",
+ "sha256": "a1b2c3d4e5f6...",
+ "fileType": {
+  "isFile": true,
+  "isDirectory": false,
+  "isSymbolicLink": false
+ },
+ "lastModified": "2024-01-15T10:30:00.000Z",
+ "permissions": "rw-r--r--"
 }
 ```
 
 ---
-
-```
 
 ## API Integration
 
@@ -289,7 +287,7 @@ await snapcat.cat(['*.ts', '*.js'], {
   maxSize: 102400,
   format: 'md'
 });
-````
+```
 
 ## Troubleshooting
 
@@ -391,7 +389,7 @@ SnapCat is released under the MIT License. See [LICENSE](./LICENSE) file for det
 - **Documentation**: `snapcat docs tutorial`
 - **Issues**: GitHub Issues
 - **Discussions**: GitHub Discussions
-- **Email**: neuxdev1@gmail.com
+- **Email**: <neuxdev1@gmail.com>
 
 ## Version Information
 

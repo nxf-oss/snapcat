@@ -1,47 +1,38 @@
-export interface FileMetadata {
-	extension: string;
-	fullPath: string;
-	relativePath: string;
-	baseName: string;
-	size: string;
-	sha256: string;
-	fileContent: string[];
-	fileType: {
-		isFile: boolean;
-		isDirectory: boolean;
-		isSymbolicLink: boolean;
-	};
-	lastModified?: string;
-	permissions?: string;
-}
+// Re-export semua types dari lib
+export * from './lib/fileTypes.js';
+export * from './lib/configTypes.js';
+export * from './lib/commandTypes.js';
+export * from './lib/commonTypes.js';
+export type {
+	FileMetadata,
+	TreeStructure,
+	FileTypeInfo,
+	FileStats,
+	FileContentOptions,
+} from './lib/fileTypes.js';
 
-export interface TreeStructure {
-	[key: string]: FileMetadata | TreeStructure;
-}
+export type {
+	SnapCatConfig,
+	ConfigOverride,
+	ConfigValidationResult,
+	RuntimeConfig,
+} from './lib/configTypes.js';
 
-export interface SnapCatConfig {
-	tabSize: number;
-	maxConcurrent: number;
-	ignorePatterns: string[];
-	defaultOutputFormat: 'json' | 'md';
-	allowedExtensions: string[];
-	showHidden: boolean;
-	maxFileSize: number;
-	logLevel: 'debug' | 'info' | 'warn' | 'error';
-	enableCache: boolean;
-	timeout: number;
-}
+export type {
+	CommandOptions,
+	CatCommandOptions,
+	TreeCommandOptions,
+	CommandExecutionResult,
+	CommandValidationResult,
+} from './lib/commandTypes.js';
 
-export interface CommandOptions {
-	recursive?: boolean;
-	output?: string;
-	format?: 'json' | 'md';
-	depth?: number;
-	ignore?: string[];
-	preview?: boolean;
-	verbose?: boolean;
-	maxSize?: number;
-	debug?: boolean;
-	showHidden?: boolean;
-	timeout?: number;
-}
+export type {
+	LogLevel,
+	OutputFormat,
+	CacheEntry,
+	CacheStats,
+	PerformanceMetrics,
+	ErrorWithContext,
+	ValidationResult,
+	PaginationOptions,
+} from './lib/commonTypes.js';

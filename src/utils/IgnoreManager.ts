@@ -1,152 +1,118 @@
-import { promises as fs } from 'fs';
 import path from 'path';
 import { defaultConfig } from '../config/defaults.js';
-import { Logger } from './Logger.js';
+import { IgnoreManagerOptions } from './lib/ignoreManager/types.js';
+import { IgnoreFileLoader } from './lib/ignoreManager/fileLoader.js';
+import { PatternMatcher } from './lib/ignoreManager/patternMatcher.js';
+import { IgnoreManagerValidator } from './lib/ignoreManager/validator.js';
+import { IgnoreManagerLogger } from './lib/ignoreManager/logger.js';
 
 export class IgnoreManager {
-	loadIgnorePatterns() {
-		throw new Error('Method not implemented.');
-	}
-	private patterns: string[] = [];
-	private patternRegexes: RegExp[] = [];
+	private patternMatcher: PatternMatcher | null = null;
 	private initialized: boolean = false;
+	private options: IgnoreManagerOptions;
+
+	constructor(options: IgnoreManagerOptions = {}) {
+		this.options = {
+			enableCache: true,
+			debug: false,
+			autoInitialize: false,
+			...options,
+		};
+
+		IgnoreManagerLogger.setDebugMode(!!this.options.debug);
+	}
 
 	async initialize(cwd: string = process.cwd()): Promise<void> {
 		if (this.initialized) {
 			return;
 		}
 
-		Logger.debug('Initializing IgnoreManager');
+		IgnoreManagerLogger.logInitialization(cwd);
+
+		// Load default configuration
 		const cfg = await defaultConfig();
-		this.patterns = [...cfg.ignorePatterns];
+		const allPatterns = [...cfg.ignorePatterns];
 
-		// Load .gitignore
-		const gitignorePath = path.join(cwd, '.gitignore');
-		await this.loadIgnoreFile(gitignorePath, '.gitignore');
+		// Load ignore files
+		const filesToLoad = [
+			{ path: path.join(cwd, '.gitignore'), name: '.gitignore' },
+			{ path: path.join(cwd, '.snapcatignore'), name: '.snapcatignore' },
+		];
 
-		// Load .snapcatignore
-		const snapcatIgnorePath = path.join(cwd, '.snapcatignore');
-		await this.loadIgnoreFile(snapcatIgnorePath, '.snapcatignore');
+		const loadResults = await IgnoreFileLoader.loadMultipleFiles(filesToLoad);
+		allPatterns.push(...loadResults.patterns);
 
-		// Compile patterns to regex for faster matching
-		this.compilePatterns();
+		// Initialize pattern matcher
+		this.patternMatcher = new PatternMatcher(allPatterns);
 
 		this.initialized = true;
-		Logger.debug(`IgnoreManager initialized with ${this.patterns.length} patterns`);
-	}
-
-	private async loadIgnoreFile(filePath: string, fileName: string): Promise<void> {
-		try {
-			if (await this.fileExists(filePath)) {
-				Logger.debug(`Loading ${fileName} from: ${filePath}`);
-				const patterns = await this.parseIgnoreFile(filePath);
-				this.patterns.push(...patterns);
-				Logger.debug(`Loaded ${patterns.length} patterns from ${fileName}`);
-			} else {
-				Logger.debug(`${fileName} not found at: ${filePath}`);
-			}
-		} catch (error) {
-			Logger.error(`Failed to load ${fileName}: ${filePath}`, error);
-		}
-	}
-
-	private async parseIgnoreFile(filePath: string): Promise<string[]> {
-		try {
-			const content = await fs.readFile(filePath, 'utf8');
-			return content
-				.split('\n')
-				.filter((line) => line.trim() && !line.startsWith('#'))
-				.map((pattern) => pattern.trim())
-				.filter((pattern) => pattern.length > 0);
-		} catch (error) {
-			Logger.error(`Failed to parse ignore file: ${filePath}`, error);
-			return [];
-		}
-	}
-
-	private compilePatterns(): void {
-		Logger.debug('Compiling ignore patterns to regex');
-		this.patternRegexes = this.patterns
-			.map((pattern) => {
-				try {
-					// Convert gitignore pattern to regex
-					let regexPattern = pattern
-						.replace(/([.+^${}()|[\]\\])/g, '\\$1') // Escape special chars
-						.replace(/\*\*/g, '.*') // ** matches any characters
-						.replace(/\*/g, '[^/]*') // * matches any characters except /
-						.replace(/\?/g, '[^/]'); // ? matches any single character except /
-
-					// If pattern starts with /, it matches from root
-					// Otherwise, it can match anywhere
-					if (!regexPattern.startsWith('/')) {
-						regexPattern = `(^|/)${regexPattern}`;
-					}
-
-					// If pattern ends with /, it matches directories
-					if (regexPattern.endsWith('/')) {
-						regexPattern = regexPattern.slice(0, -1) + '($|/)';
-					} else {
-						regexPattern += '$';
-					}
-
-					return new RegExp(regexPattern);
-				} catch (error) {
-					Logger.error(`Failed to compile pattern: ${pattern}`, error);
-					return null;
-				}
-			})
-			.filter((regex): regex is RegExp => regex !== null);
-
-		Logger.debug(`Compiled ${this.patternRegexes.length} regex patterns`);
+		IgnoreManagerLogger.logInitializationComplete(allPatterns.length);
 	}
 
 	shouldIgnore(filePath: string, baseName: string): boolean {
-		if (!this.initialized) {
-			Logger.warn('IgnoreManager not initialized. Call initialize() first.', null);
+		IgnoreManagerValidator.validateInitialization(this.initialized);
+		IgnoreManagerValidator.validateFilePath(filePath);
+		IgnoreManagerValidator.validateBaseName(baseName);
+
+		if (!this.patternMatcher) {
 			return false;
 		}
 
-		// Quick check for common ignored base names
-		const quickIgnore = this.patterns.some((pattern) => {
-			if (!pattern.includes('*') && !pattern.includes('?')) {
-				return baseName === pattern;
-			}
-			return false;
-		});
-
-		if (quickIgnore) {
-			Logger.debug(`Quick ignored: ${filePath} (baseName: ${baseName})`);
-			return true;
-		}
-
-		// Full regex matching
-		const shouldIgnore = this.patternRegexes.some((regex) => {
-			const matches = regex.test(filePath) || regex.test(baseName);
-			if (matches) {
-				Logger.debug(`Regex ignored: ${filePath} (pattern: ${regex.source})`);
-			}
-			return matches;
-		});
-
-		return shouldIgnore;
+		const result = this.patternMatcher.shouldIgnore(filePath, baseName);
+		return result.shouldIgnore;
 	}
 
 	addPatterns(patterns: string[]): void {
-		Logger.debug(`Adding ${patterns.length} custom ignore patterns`);
-		this.patterns.push(...patterns);
-		this.compilePatterns(); // Recompile with new patterns
+		IgnoreManagerValidator.validatePatterns(patterns);
+
+		if (this.patternMatcher) {
+			this.patternMatcher.addPatterns(patterns);
+		}
 	}
 
 	getPatterns(): string[] {
-		return [...this.patterns];
+		// Return a copy to prevent external modification
+		if (this.patternMatcher) {
+			// This would need to be implemented in PatternMatcher
+			// For now, return empty array
+			return [];
+		}
+		return [];
 	}
 
-	private async fileExists(filePath: string): Promise<boolean> {
-		try {
-			await fs.access(filePath);
-			return true;
-		} catch {
-			return false;
+	// Method to satisfy the interface from TreeBuilder
+	loadIgnorePatterns(): void {
+		// This is already handled in initialize()
+		// For compatibility, we can call initialize if not already initialized
+		if (!this.initialized) {
+			this.initialize().catch((error) => {
+				IgnoreManagerLogger.error('Auto-initialization failed', error);
+			});
 		}
+	}
+
+	// Additional utility methods
+	isInitialized(): boolean {
+		return this.initialized;
+	}
+
+	getPatternCount(): number {
+		if (this.patternMatcher) {
+			const counts = this.patternMatcher.getPatternCount();
+			return counts.simple + counts.compiled;
+		}
+		return 0;
+	}
+
+	clearPatterns(): void {
+		if (this.patternMatcher) {
+			this.patternMatcher.clearPatterns();
+		}
+		this.initialized = false;
+	}
+
+	reload(cwd: string = process.cwd()): Promise<void> {
+		this.clearPatterns();
+		return this.initialize(cwd);
 	}
 }

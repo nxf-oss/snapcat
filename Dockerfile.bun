@@ -1,0 +1,33 @@
+FROM oven/bun:1-alpine AS builder
+RUN apk add --no-cache \
+    git \
+    python3 \
+    make \
+    g++ \
+    pkgconfig \
+    libc6-compat
+WORKDIR /app
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
+COPY . .
+ARG TARGET_PLATFORM
+ARG TARGET_ARCH
+ARG APP_VERSION
+RUN bun run build
+FROM oven/bun:1-alpine AS runtime
+RUN apk add --no-cache libc6-compat
+RUN addgroup -g 1001 -S app && \
+    adduser -S app -u 1001
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json .
+RUN bun build ./dist/index.js \
+    --outfile /usr/local/bin/snapcat \
+    --target bun-${TARGET_PLATFORM:-linux}-${TARGET_ARCH:-x64} \
+    --compile \
+    --minify
+USER app
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD bun -e "import { existsSync } from 'fs'; process.exit(existsSync('/tmp/healthy') ? 0 : 1)"
+CMD ["/usr/local/bin/snapcat"]

@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+dist
+downloads
+.coverage
+.nyc_output
+*.tar.gz
+*.zip
+.DS_Store
+.git
+.github
+.vscode
+.idea
+*.log
+tmp
+temp
